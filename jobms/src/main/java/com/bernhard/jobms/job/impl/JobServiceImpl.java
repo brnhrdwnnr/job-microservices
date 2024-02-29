@@ -3,6 +3,8 @@ package com.bernhard.jobms.job.impl;
 import com.bernhard.jobms.job.Job;
 import com.bernhard.jobms.job.JobRepository;
 import com.bernhard.jobms.job.JobService;
+import com.bernhard.jobms.job.client.CompanyClient;
+import com.bernhard.jobms.job.client.ReviewClient;
 import com.bernhard.jobms.job.dto.JobDTO;
 import com.bernhard.jobms.job.external.Company;
 import com.bernhard.jobms.job.external.Review;
@@ -25,6 +27,8 @@ public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
     private final RestTemplate restTemplate;
+    private final CompanyClient companyClient;
+    private final ReviewClient reviewClient;
 
     @Override
     public List<JobDTO> findAll() {
@@ -36,10 +40,13 @@ public class JobServiceImpl implements JobService {
     }
 
     private JobDTO converToDto (Job job) {
+        /*
         Company company = restTemplate.getForObject(
                 "http://COMPANY-SERVICE:8081/companies/" + job.getCompanyId(), Company.class);
+         */
 
         //if list is return as response its better to use exchange, getForObject is most suitable for single response
+        /*
         ResponseEntity<List<Review>> reviewResponse = restTemplate.exchange(
                 "http://REVIEW-SERVICE:8083/reviews?companyId=" + job.getCompanyId(),
                 HttpMethod.GET,
@@ -48,6 +55,9 @@ public class JobServiceImpl implements JobService {
                 });
 
         List<Review> reviews = reviewResponse.getBody();
+         */
+        Company company = companyClient.getCompany(job.getCompanyId());
+        List<Review> reviews = reviewClient.getReviews(job.getCompanyId());
 
         return JobMapper.mapToJobWithCompanyDto(job, company, reviews);
     }

@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class AppConfig {
 
+    // this class wont be needed if we use openfeign
     @Bean
     @LoadBalanced
     public RestTemplate restTemplate() {
