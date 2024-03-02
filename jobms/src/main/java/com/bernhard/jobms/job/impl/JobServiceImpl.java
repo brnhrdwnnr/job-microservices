@@ -9,13 +9,9 @@ import com.bernhard.jobms.job.dto.JobDTO;
 import com.bernhard.jobms.job.external.Company;
 import com.bernhard.jobms.job.external.Review;
 import com.bernhard.jobms.job.mapper.JobMapper;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,17 +22,31 @@ import java.util.Optional;
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
-    private final RestTemplate restTemplate;
+//    private final RestTemplate restTemplate;
     private final CompanyClient companyClient;
     private final ReviewClient reviewClient;
 
+    public int attempt = 0;
+
     @Override
+//    @CircuitBreaker(name = "companyBreaker",
+//            fallbackMethod = "companyBreakerFallback"
+//    )
+//    @Retry(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
+    @RateLimiter(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
     public List<JobDTO> findAll() {
+        System.out.println("Attempt: " + ++attempt);
         List<Job> jobs = jobRepository.findAll();
         return jobs
                 .stream()
                 .map(this::converToDto)
                 .toList();
+    }
+    
+    public List<String> companyBreakerFallback(Exception e) {
+        List<String> list = new ArrayList<>();
+        list.add("Dummy");
+        return list;
     }
 
     private JobDTO converToDto (Job job) {
