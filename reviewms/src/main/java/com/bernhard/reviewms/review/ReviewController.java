@@ -1,5 +1,6 @@
 package com.bernhard.reviewms.review;
 
+import com.bernhard.reviewms.review.messaging.ReviewMessageProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.List;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final ReviewMessageProducer reviewMessageProducer;
 
     @GetMapping
     public ResponseEntity<List<Review>> getAllReviews(@RequestParam Long companyId) {
@@ -31,6 +33,7 @@ public class ReviewController {
     public ResponseEntity<String> addReview (@RequestParam Long companyId, @RequestBody Review review) {
         boolean isReviewSaved = reviewService.addReview(companyId, review);
         if (isReviewSaved) {
+            reviewMessageProducer.sendMessage(review);
             return new ResponseEntity<>("Review added successfully", HttpStatus.OK);
         }
         return new ResponseEntity<>("Review not saved", HttpStatus.NOT_FOUND);
@@ -60,5 +63,15 @@ public class ReviewController {
             return new ResponseEntity<>("Review deleted successfully", HttpStatus.OK);
         }
         return new ResponseEntity<>("Review not found", HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("/averageRating")
+    public Double getAverageRating(Long companyId) {
+        List<Review> reviewList = reviewService.getAllReviews(companyId);
+        return reviewList
+                .stream()
+                .mapToDouble(Review::getRating)
+                .average()
+                .orElse(0.0);
     }
 }
