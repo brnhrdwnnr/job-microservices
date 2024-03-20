@@ -50,22 +50,6 @@ public class JobServiceImpl implements JobService {
     }
 
     private JobDTO converToDto (Job job) {
-        /*
-        Company company = restTemplate.getForObject(
-                "http://COMPANY-SERVICE:8081/companies/" + job.getCompanyId(), Company.class);
-         */
-
-        //if list is return as response its better to use exchange, getForObject is most suitable for single response
-        /*
-        ResponseEntity<List<Review>> reviewResponse = restTemplate.exchange(
-                "http://REVIEW-SERVICE:8083/reviews?companyId=" + job.getCompanyId(),
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<Review>>() {
-                });
-
-        List<Review> reviews = reviewResponse.getBody();
-         */
         Company company = companyClient.getCompany(job.getCompanyId());
         List<Review> reviews = reviewClient.getReviews(job.getCompanyId());
 
